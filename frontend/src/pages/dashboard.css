@@ -1,0 +1,154 @@
+body {
+  margin: 0;
+  padding: 0;
+  font-family: Arial, sans-serif;
+  background-color: #1e1e1e;
+  color: #f4f4f4;
+}
+.dashboard-container {
+  width: 100vw;
+  height: 100vh;
+  background-color: #121212;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+
+.dashboard-card {
+  width: 90%;
+  max-width: 1000px;
+  background-color: #1e1e1e;
+  padding: 2rem;
+  border-radius: 16px;
+  box-shadow: 0 0 20px rgba(0, 0, 0, 0.6);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+
+
+h1, h2 {
+  text-align: center;
+  margin-bottom: 2rem;
+  font-size: 2rem;
+}
+
+.task-form {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem;
+  justify-content: center;
+  margin-bottom: 2rem;
+  width: 100%;
+}
+
+.task-form input,
+.task-form select {
+  padding: 0.5rem;
+  border-radius: 6px;
+  border: none;
+  width: 200px;
+  background-color: #2a2a2a;
+  color: white;
+}
+
+.task-form button {
+  padding: 0.7rem 1.2rem;
+  background-color: #00b894;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  font-weight: bold;
+  transition: background 0.3s ease;
+}
+
+.task-form button:hover {
+  background-color: #019875;
+}
+
+.task-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem;
+  justify-content: center;
+  width: 100%;
+}
+
+.task-card {
+  position: relative;
+  padding: 1rem;
+  border-radius: 10px;
+  background-color: #1e1e1e;
+  box-shadow: 0 0 10px rgba(0, 0, 0, 0.3);
+  margin: 10px;
+  width: 300px;
+  color: white;
+}
+
+
+.task-type-icon {
+  position: absolute;
+  top: 8px;
+  right: 10px;
+  font-size: 1.4rem;
+}
+
+.note-icon {
+  color: #4CAF50; 
+}
+
+.reminder-icon {
+  color: #FFD700; /* Gold for reminders */
+}
+
+.task-card:hover {
+  transform: translateY(-7px);
+}
+
+.task-card.note {
+  border-left: 5px solid #74b9ff;
+}
+
+.task-card.reminder {
+  border-left: 5px solid #fdcb6e;
+}
+
+.task-card h3 {
+  margin: 0 0 0.5rem;
+}
+
+.task-card p {
+  margin: 0.25rem 0;
+}
+
+.task-card small {
+  display: block;
+  margin-top: 0.5rem;
+  font-size: 0.8rem;
+  color: #bbb;
+}
+
+.button-group {
+  margin-top: 1rem;
+  display: flex;
+  gap: 0.8rem;
+  justify-content: flex-end;
+}
+
+.button-group button {
+  background: none;
+  border: none;
+  color: #00c896;
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+  padding: 0;
+  transition: color 0.2s ease;
+}
+
+.button-group button:hover {
+  text-decoration: underline;
+}
