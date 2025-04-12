@@ -86,7 +86,7 @@ const Dashboard = () => {
     }
   };
 
-  // Edit task (prefill form)
+  // Edit task
   const handleEdit = (task) => {
     setEditTaskId(task._id);
     setName(task.name);
@@ -97,7 +97,7 @@ const Dashboard = () => {
   return (
     <div className="dashboard-container">
       <div className="dashboard-card">
-        <h1>My Tasks</h1>
+        <h1>Daily Planner</h1>
 
         {/* Task Form */}
         <form className="task-form" onSubmit={handleSubmit}>

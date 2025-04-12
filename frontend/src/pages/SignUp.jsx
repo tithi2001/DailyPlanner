@@ -10,16 +10,28 @@ const Signup = () => {
 
   const handleSignup = async (e) => {
     e.preventDefault();
-      try {
-        console.log("Sending signup:", email, password);
-
+    try {
       await axios.post("http://localhost:5000/api/users/signup", {
         email,
         password,
       });
+
+      // Successful signup
       navigate("/login");
     } catch (err) {
-      alert("Signup failed");
+      if (
+        err.response &&
+        err.response.status === 400 &&
+        err.response.data.message === "User already exists"
+      ) {
+        alert("User already exists. Redirecting to login...");
+        navigate("/login");
+      } else {
+        console.error("Signup error:", err);
+        alert(
+          err.response?.data?.message || "Signup failed. Please try again."
+        );
+      }
     }
   };
 
