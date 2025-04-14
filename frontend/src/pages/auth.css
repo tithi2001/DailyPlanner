@@ -63,3 +63,10 @@
 .redirect-text a:hover {
   text-decoration: underline;
 }
+.error-text {
+  color: #ff6b6b;
+  font-size: 0.8rem;
+  margin-top: -0.8rem;
+  margin-bottom: 0.8rem;
+  text-align: left;
+}

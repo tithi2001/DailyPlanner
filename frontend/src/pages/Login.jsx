@@ -6,16 +6,29 @@ import "./auth.css";
 const Login = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [errorMsg, setErrorMsg] = useState("");
   const navigate = useNavigate();
 
   const handleLogin = async (e) => {
     e.preventDefault();
+    setErrorMsg(""); // Clear any previous errors
     try {
-      const res = await axios.post("/api/users/login", { email, password });
+      const res = await axios.post("http://localhost:5000/api/users/login", {
+        email,
+        password,
+      });
       localStorage.setItem("token", res.data.token);
       navigate("/dashboard");
     } catch (err) {
-      alert("Login failed");
+      if (
+        err.response &&
+        err.response.status === 401 &&
+        err.response.data.message === "Invalid credentials"
+      ) {
+        setErrorMsg("Invalid credentials");
+      } else {
+        setErrorMsg("Login failed. Please try again.");
+      }
     }
   };
 
@@ -37,6 +50,9 @@ const Login = () => {
           type="password"
           required
         />
+
+        {errorMsg && <p className="error-text">{errorMsg}</p>}
+
         <button type="submit">Login</button>
 
         <p className="redirect-text">
