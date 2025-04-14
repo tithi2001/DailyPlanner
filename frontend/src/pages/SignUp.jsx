@@ -1,22 +1,39 @@
 import React, { useState } from "react";
 import axios from "axios";
-import { useNavigate, Link } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import "./auth.css";
 
 const Signup = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
+  const [errors, setErrors] = useState({});
   const navigate = useNavigate();
+
+  const validateForm = () => {
+    const newErrors = {};
+    if (password.length < 8) {
+      newErrors.password = "Password must be at least 8 characters long.";
+    }
+    if (password !== confirmPassword) {
+      newErrors.confirmPassword = "Passwords do not match.";
+    }
+    return newErrors;
+  };
 
   const handleSignup = async (e) => {
     e.preventDefault();
+    const validationErrors = validateForm();
+    if (Object.keys(validationErrors).length > 0) {
+      setErrors(validationErrors);
+      return;
+    }
+
     try {
       await axios.post("http://localhost:5000/api/users/signup", {
         email,
         password,
       });
-
-      // Successful signup
       navigate("/login");
     } catch (err) {
       if (
@@ -24,13 +41,9 @@ const Signup = () => {
         err.response.status === 400 &&
         err.response.data.message === "User already exists"
       ) {
-        alert("User already exists. Redirecting to login...");
         navigate("/login");
       } else {
-        console.error("Signup error:", err);
-        alert(
-          err.response?.data?.message || "Signup failed. Please try again."
-        );
+        setErrors({ api: err.response?.data?.message || "Signup failed." });
       }
     }
   };
@@ -49,15 +62,26 @@ const Signup = () => {
         <input
           value={password}
           onChange={(e) => setPassword(e.target.value)}
-          placeholder="Password"
+          placeholder="Password (min 8 characters)"
           type="password"
           required
         />
-        <button type="submit">Signup</button>
+        {errors.password && <p className="error-text">{errors.password}</p>}
 
-        <p className="redirect-text">
-          Already have an account? <Link to="/login">Login</Link>
-        </p>
+        <input
+          value={confirmPassword}
+          onChange={(e) => setConfirmPassword(e.target.value)}
+          placeholder="Re-enter Password"
+          type="password"
+          required
+        />
+        {errors.confirmPassword && (
+          <p className="error-text">{errors.confirmPassword}</p>
+        )}
+
+        {errors.api && <p className="error-text">{errors.api}</p>}
+
+        <button type="submit">Signup</button>
       </form>
     </div>
   );
