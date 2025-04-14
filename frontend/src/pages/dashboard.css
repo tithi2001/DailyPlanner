@@ -43,6 +43,10 @@ h1, h2 {
   margin-bottom: 2rem;
   width: 100%;
 }
+.task-form select {
+  appearance: none;
+  cursor: pointer;
+}
 
 .task-form input,
 .task-form select {
@@ -152,3 +156,5 @@ h1, h2 {
 .button-group button:hover {
   text-decoration: underline;
 }
+
+

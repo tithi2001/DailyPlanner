@@ -9,11 +9,11 @@ const Dashboard = () => {
   const [description, setDescription] = useState("");
   const [type, setType] = useState("note");
   const [editTaskId, setEditTaskId] = useState(null);
+  const [filterType, setFilterType] = useState("all");
   const navigate = useNavigate();
 
   const token = localStorage.getItem("token");
 
-  // Fetch tasks
   const fetchTasks = async () => {
     try {
       const res = await axios.get("http://localhost:5000/api/tasks", {
@@ -32,7 +32,6 @@ const Dashboard = () => {
     fetchTasks();
   }, []);
 
-  // Create task
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
@@ -65,13 +64,13 @@ const Dashboard = () => {
       setName("");
       setDescription("");
       setType("note");
+      setFilterType("all");
     } catch (error) {
       console.error("Error saving task", error);
       alert("Failed to save task");
     }
   };
 
-  // Delete task
   const handleDelete = async (id) => {
     try {
       await axios.delete(`http://localhost:5000/api/tasks/${id}`, {
@@ -86,13 +85,29 @@ const Dashboard = () => {
     }
   };
 
-  // Edit task
   const handleEdit = (task) => {
     setEditTaskId(task._id);
     setName(task.name);
     setDescription(task.description);
     setType(task.type);
+    setFilterType(task.type); // Apply filter during edit for visual clarity
   };
+
+  const handleTypeChange = (e) => {
+    const selected = e.target.value;
+    if (selected === "all") {
+      setType("note"); // Default for task creation
+      setFilterType("all");
+    } else {
+      setType(selected);
+      setFilterType(selected);
+    }
+  };
+
+  const filteredTasks =
+    filterType === "all"
+      ? tasks
+      : tasks.filter((task) => task.type === filterType);
 
   return (
     <div className="dashboard-container">
@@ -115,7 +130,8 @@ const Dashboard = () => {
             onChange={(e) => setDescription(e.target.value)}
             required
           />
-          <select value={type} onChange={(e) => setType(e.target.value)}>
+          <select value={filterType} onChange={handleTypeChange}>
+            <option value="all">All</option>
             <option value="note">Note</option>
             <option value="reminder">Reminder</option>
           </select>
@@ -124,12 +140,11 @@ const Dashboard = () => {
 
         {/* Task List */}
         <div className="task-list">
-          {tasks.length > 0 &&
-            tasks.map((task) => (
+          {filteredTasks.length > 0 ? (
+            filteredTasks.map((task) => (
               <div key={task._id} className={`task-card ${task.type}`}>
                 <h3>{task.name}</h3>
                 <p>{task.description}</p>
-                {/* <p>Type: {task.type}</p> */}
                 <div className="task-type-icon">
                   {task.type === "note" ? (
                     <span title="Note" className="note-icon">
@@ -141,7 +156,6 @@ const Dashboard = () => {
                     </span>
                   )}
                 </div>
-
                 <small>
                   Created: {new Date(task.createdAt).toLocaleString()}
                 </small>
@@ -157,7 +171,10 @@ const Dashboard = () => {
                   </button>
                 </div>
               </div>
-            ))}
+            ))
+          ) : (
+            <p>No tasks found for selected type.</p>
+          )}
         </div>
       </div>
     </div>
