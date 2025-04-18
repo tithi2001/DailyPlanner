@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 import axios from "axios";
 import "./dashboard.css";
+import Logout from "./logOut";
 import { useNavigate } from "react-router-dom";
 
 const Dashboard = () => {
@@ -21,7 +22,12 @@ const Dashboard = () => {
           Authorization: `Bearer ${token}`,
         },
       });
-      setTasks(res.data);
+
+      const sorted = res.data.sort(
+        (a, b) => new Date(b.updatedAt) - new Date(a.updatedAt)
+      );
+
+      setTasks(sorted);
     } catch (error) {
       console.error("Failed to fetch tasks", error);
       navigate("/login");
@@ -49,7 +55,9 @@ const Dashboard = () => {
           }
         );
         setTasks((prev) =>
-          prev.map((task) => (task._id === editTaskId ? res.data : task))
+          prev
+            .map((task) => (task._id === editTaskId ? res.data : task))
+            .sort((a, b) => new Date(b.updatedAt) - new Date(a.updatedAt))
         );
         setEditTaskId(null);
       } else {
@@ -58,13 +66,16 @@ const Dashboard = () => {
             Authorization: `Bearer ${token}`,
           },
         });
-        setTasks((prev) => [...prev, res.data]);
+        setTasks((prev) =>
+          [...prev, res.data].sort(
+            (a, b) => new Date(b.updatedAt) - new Date(a.updatedAt)
+          )
+        );
       }
 
       setName("");
       setDescription("");
-      setType("note");
-      setFilterType("all");
+      setType(filterType !== "all" ? filterType : "note");
     } catch (error) {
       console.error("Error saving task", error);
       alert("Failed to save task");
@@ -90,13 +101,13 @@ const Dashboard = () => {
     setName(task.name);
     setDescription(task.description);
     setType(task.type);
-    setFilterType(task.type); // Apply filter during edit for visual clarity
+    setFilterType(task.type);
   };
 
   const handleTypeChange = (e) => {
     const selected = e.target.value;
     if (selected === "all") {
-      setType("note"); // Default for task creation
+      setType("note");
       setFilterType("all");
     } else {
       setType(selected);
@@ -114,7 +125,6 @@ const Dashboard = () => {
       <div className="dashboard-card">
         <h1>Daily Planner</h1>
 
-        {/* Task Form */}
         <form className="task-form" onSubmit={handleSubmit}>
           <input
             type="text"
@@ -136,42 +146,55 @@ const Dashboard = () => {
             <option value="reminder">Reminder</option>
           </select>
           <button type="submit">{editTaskId ? "Update" : "Add"} Task</button>
+          <Logout />
         </form>
 
-        {/* Task List */}
         <div className="task-list">
           {filteredTasks.length > 0 ? (
-            filteredTasks.map((task) => (
-              <div key={task._id} className={`task-card ${task.type}`}>
-                <h3>{task.name}</h3>
-                <p>{task.description}</p>
-                <div className="task-type-icon">
-                  {task.type === "note" ? (
-                    <span title="Note" className="note-icon">
-                      ✏️
-                    </span>
-                  ) : (
-                    <span title="Reminder" className="reminder-icon">
-                      🔔
-                    </span>
-                  )}
+            filteredTasks.map((task) => {
+              const created = new Date(task.createdAt);
+              const updated = new Date(task.updatedAt);
+              const isUpdated = updated.getTime() !== created.getTime();
+
+              return (
+                <div key={task._id} className={`task-card ${task.type}`}>
+                  <h3>{task.name}</h3>
+                  <p>{task.description}</p>
+                  <div className="task-type-icon">
+                    {task.type === "note" ? (
+                      <span title="Note" className="note-icon">
+                        ✏️
+                      </span>
+                    ) : (
+                      <span title="Reminder" className="reminder-icon">
+                        🔔
+                      </span>
+                    )}
+                  </div>
+                  <small>
+                    {new Date(task.createdAt).getTime() !==
+                    new Date(task.updatedAt).getTime()
+                      ? `Updated: ${new Date(task.updatedAt).toLocaleString()}`
+                      : `Created: ${new Date(task.createdAt).toLocaleString()}`}
+                  </small>
+
+                  <div className="button-group">
+                    <button
+                      className="edit-btn"
+                      onClick={() => handleEdit(task)}
+                    >
+                      Edit
+                    </button>
+                    <button
+                      className="delete-btn"
+                      onClick={() => handleDelete(task._id)}
+                    >
+                      Delete
+                    </button>
+                  </div>
                 </div>
-                <small>
-                  Created: {new Date(task.createdAt).toLocaleString()}
-                </small>
-                <div className="button-group">
-                  <button className="edit-btn" onClick={() => handleEdit(task)}>
-                    Edit
-                  </button>
-                  <button
-                    className="delete-btn"
-                    onClick={() => handleDelete(task._id)}
-                  >
-                    Delete
-                  </button>
-                </div>
-              </div>
-            ))
+              );
+            })
           ) : (
             <p>No tasks found for selected type.</p>
           )}

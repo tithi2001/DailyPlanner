@@ -25,6 +25,8 @@ body {
   display: flex;
   flex-direction: column;
   align-items: center;
+  height: 90vh;
+  overflow: hidden;
 }
 
 
@@ -79,6 +81,9 @@ h1, h2 {
   gap: 1rem;
   justify-content: center;
   width: 100%;
+  overflow-y: auto;              
+  max-height: 60vh;             
+  padding-right: 10px;
 }
 
 .task-card {
@@ -91,7 +96,15 @@ h1, h2 {
   width: 300px;
   color: white;
 }
+/* Optional: Hide scrollbar for aesthetics */
+.task-list::-webkit-scrollbar {
+  width: 6px;
+}
 
+.task-list::-webkit-scrollbar-thumb {
+  background-color: #333;
+  border-radius: 3px;
+}
 
 .task-type-icon {
   position: absolute;

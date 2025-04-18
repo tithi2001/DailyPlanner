@@ -1,18 +1,22 @@
 import React, { useState } from "react";
 import axios from "axios";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, Link } from "react-router-dom";
 import "./auth.css";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import { faEye, faEyeSlash } from "@fortawesome/free-solid-svg-icons";
 
 const Signup = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [errors, setErrors] = useState({});
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const navigate = useNavigate();
 
   const validateForm = () => {
     const newErrors = {};
-    if (password.length < 8) {
+    if (password.length < 6) {
       newErrors.password = "Password must be at least 8 characters long.";
     }
     if (password !== confirmPassword) {
@@ -52,6 +56,7 @@ const Signup = () => {
     <div className="auth-container">
       <form onSubmit={handleSignup} className="auth-form">
         <h2>Signup</h2>
+
         <input
           value={email}
           onChange={(e) => setEmail(e.target.value)}
@@ -59,22 +64,37 @@ const Signup = () => {
           type="email"
           required
         />
-        <input
-          value={password}
-          onChange={(e) => setPassword(e.target.value)}
-          placeholder="Password (min 8 characters)"
-          type="password"
-          required
-        />
+
+        <div className="password-wrapper">
+          <input
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            placeholder="Password (min 6 characters)"
+            type={showPassword ? "text" : "password"}
+            required
+          />
+          <FontAwesomeIcon
+            icon={showPassword ? faEyeSlash : faEye}
+            className="eye-icon"
+            onClick={() => setShowPassword(!showPassword)}
+          />
+        </div>
         {errors.password && <p className="error-text">{errors.password}</p>}
 
-        <input
-          value={confirmPassword}
-          onChange={(e) => setConfirmPassword(e.target.value)}
-          placeholder="Re-enter Password"
-          type="password"
-          required
-        />
+        <div className="password-wrapper">
+          <input
+            value={confirmPassword}
+            onChange={(e) => setConfirmPassword(e.target.value)}
+            placeholder="Re-enter Password"
+            type={showConfirmPassword ? "text" : "password"}
+            required
+          />
+          <FontAwesomeIcon
+            icon={showConfirmPassword ? faEyeSlash : faEye}
+            className="eye-icon"
+            onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+          />
+        </div>
         {errors.confirmPassword && (
           <p className="error-text">{errors.confirmPassword}</p>
         )}
@@ -82,6 +102,10 @@ const Signup = () => {
         {errors.api && <p className="error-text">{errors.api}</p>}
 
         <button type="submit">Signup</button>
+
+        <p className="redirect-text">
+          Already have an account? <Link to="/login">Login</Link>
+        </p>
       </form>
     </div>
   );
