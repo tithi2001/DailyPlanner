@@ -70,3 +70,29 @@
   margin-bottom: 0.8rem;
   text-align: left;
 }
+
+.password-wrapper {
+  position: relative;
+  width: 100%;
+}
+
+.password-wrapper input {
+  width: 100%;
+  padding: 10px 38px 10px 12px; /* Top, Right, Bottom, Left */
+  box-sizing: border-box;
+  font-size: 0.9rem;
+}
+
+.eye-icon {
+  position: absolute;
+  top: 50%;
+  right: 14px;
+  transform: translateY(-50%);
+  cursor: pointer;
+  color: #b0b0b0;
+  font-size: 0.85rem;
+  pointer-events: all;
+  line-height: 1;
+}
+
+

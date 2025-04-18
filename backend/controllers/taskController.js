@@ -2,7 +2,7 @@ import { Task } from "../models/task.js";
 import asyncHandler from "express-async-handler";
 
 export const getTasks = asyncHandler(async (req, res) => {
-  const tasks = await Task.find({ user: req.user.id }).sort({ createdAt: -1 });
+  const tasks = await Task.find({ user: req.user.id }).sort({ updatedAt: -1 });
   res.status(200).json(tasks);
 });
 
