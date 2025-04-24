@@ -13,7 +13,9 @@ const Dashboard = () => {
   const [filterType, setFilterType] = useState("all");
   const [showNoteModal, setShowNoteModal] = useState(false);
   const [showReminderModal, setShowReminderModal] = useState(false);
+  const [reminderDate, setReminderDate] = useState("");
   const [reminderTime, setReminderTime] = useState("");
+  const [dateError, setDateError] = useState("");
   const navigate = useNavigate();
 
   const token = localStorage.getItem("token");
@@ -41,12 +43,20 @@ const Dashboard = () => {
     fetchTasks();
   }, []);
 
+  const isReminderDateValid = () => {
+    if (!reminderDate || !reminderTime) return false;
+    const now = new Date();
+    const reminderDateTime = new Date(`${reminderDate}T${reminderTime}:00`);
+    return reminderDateTime > now;
+  };
+
   const handleSubmit = async (e) => {
-    e.preventDefault();
+    if (e) e.preventDefault();
     try {
       const taskData = { name, description, type };
-      if (type === "reminder" && reminderTime) {
-        taskData.reminderTime = reminderTime;
+      if (type === "reminder") {
+        const reminderDateTime = `${reminderDate}T${reminderTime}:00`;
+        taskData.reminderTime = reminderDateTime;
       }
 
       let res;
@@ -82,6 +92,7 @@ const Dashboard = () => {
 
       setName("");
       setDescription("");
+      setReminderDate("");
       setReminderTime("");
       setShowNoteModal(false);
       setShowReminderModal(false);
@@ -107,16 +118,20 @@ const Dashboard = () => {
   };
 
   const handleEdit = (task) => {
-    setEditTaskId(task._id);
     setName(task.name);
     setDescription(task.description);
     setType(task.type);
-    setFilterType(task.type);
-    if (task.type === "reminder") {
-      setReminderTime(task.reminderTime || "");
-      setShowReminderModal(true);
-    } else {
+    setEditTaskId(task._id);
+
+    if (task.type.toLowerCase() === "note") {
       setShowNoteModal(true);
+    } else if (task.type.toLowerCase() === "reminder") {
+      if (task.reminderTime) {
+        const [date, time] = task.reminderTime.split("T");
+        setReminderDate(date);
+        setReminderTime(time.slice(0, 5)); // Extract HH:mm
+      }
+      setShowReminderModal(true);
     }
   };
 
@@ -143,6 +158,7 @@ const Dashboard = () => {
     setType("reminder");
     setName("");
     setDescription("");
+    setReminderDate("");
     setReminderTime("");
     setEditTaskId(null);
     setShowReminderModal(true);
@@ -184,9 +200,26 @@ const Dashboard = () => {
                 </div>
                 <p>{task.description}</p>
                 {task.type === "reminder" && task.reminderTime && (
-                  <p className="reminder-time">
-                    ⏰ {new Date(task.reminderTime).toLocaleString()}
-                  </p>
+                  <div className="reminder-time">
+                    <span>Reminder:</span>
+                    <span>
+                      {new Date(task.reminderTime)
+                        .toLocaleString("en-IN", {
+                          timeZone: "Asia/Kolkata",
+                          day: "2-digit",
+                          month: "short",
+                          year: "numeric",
+                          hour: "2-digit",
+                          minute: "2-digit",
+                          hour12: false,
+                        })
+                        .replace(/,/g, "")
+                        .replace(/(\d+:\d+)/, "$1") +
+                        (new Date(task.reminderTime).getHours() >= 12
+                          ? "PM"
+                          : "AM")}
+                    </span>
+                  </div>
                 )}
                 <small>
                   {task.updatedAt !== task.createdAt
@@ -194,7 +227,14 @@ const Dashboard = () => {
                     : `Created: ${new Date(task.createdAt).toLocaleString()}`}
                 </small>
                 <div className="button-group">
-                  <button onClick={() => handleEdit(task)}>Edit</button>
+                  <button
+                    onClick={() => handleEdit(task)}
+                    className={`edit-button ${
+                      task.type === "reminder" ? "reminder-edit" : ""
+                    }`}
+                  >
+                    Edit
+                  </button>
                   <button onClick={() => handleDelete(task._id)}>Delete</button>
                 </div>
               </div>
@@ -205,11 +245,12 @@ const Dashboard = () => {
         </div>
 
         {/* Note Modal */}
-        {/* Add Note Modal */}
         {showNoteModal && (
           <div className="modal-overlay">
             <div className="modal">
-              <div className="modal-header">Add Note</div>
+              <div className="modal-header">
+                {editTaskId ? "Edit Note" : "Add Note"}
+              </div>
               <div className="modal-body">
                 <input
                   type="text"
@@ -240,18 +281,20 @@ const Dashboard = () => {
                   className="modal-button modal-button-submit"
                   onClick={handleSubmit}
                 >
-                  Add Note
+                  {editTaskId ? "Update Note" : "Add Note"}
                 </button>
               </div>
             </div>
           </div>
         )}
 
-        {/* Add Reminder Modal */}
+        {/* Reminder Modal */}
         {showReminderModal && (
           <div className="modal-overlay">
             <div className="modal reminder-modal">
-              <div className="modal-header">Add Reminder</div>
+              <div className="modal-header">
+                {editTaskId ? "Edit Reminder" : "Add Reminder"}
+              </div>
               <div className="modal-body">
                 <input
                   type="text"
@@ -268,19 +311,44 @@ const Dashboard = () => {
                   onChange={(e) => setDescription(e.target.value)}
                   required
                 />
-                <input
-                  type="datetime-local"
-                  className="modal-input datetime-input"
-                  value={reminderTime}
-                  onChange={(e) => setReminderTime(e.target.value)}
-                  required
-                />
+                <div className="datetime-picker">
+                  <label>Date & Time</label>
+                  <input
+                    type="date"
+                    className="modal-input"
+                    value={reminderDate}
+                    onChange={(e) => setReminderDate(e.target.value)}
+                    min={new Date().toISOString().split("T")[0]}
+                    required
+                  />
+                  <input
+                    type="time"
+                    className="modal-input"
+                    value={reminderTime}
+                    onChange={(e) => setReminderTime(e.target.value)}
+                    min={
+                      reminderDate === new Date().toISOString().split("T")[0]
+                        ? `${new Date()
+                            .getHours()
+                            .toString()
+                            .padStart(2, "0")}:${(new Date().getMinutes() + 1)
+                            .toString()
+                            .padStart(2, "0")}`
+                        : "00:00"
+                    }
+                    required
+                  />
+                  {dateError && <p className="error-message">{dateError}</p>}
+                </div>
               </div>
               <div className="modal-footer">
                 <button
                   type="button"
                   className="modal-button modal-button-cancel"
-                  onClick={() => setShowReminderModal(false)}
+                  onClick={() => {
+                    setShowReminderModal(false);
+                    setDateError("");
+                  }}
                 >
                   Cancel
                 </button>
@@ -288,8 +356,9 @@ const Dashboard = () => {
                   type="button"
                   className="modal-button modal-button-submit"
                   onClick={handleSubmit}
+                  disabled={!isReminderDateValid()}
                 >
-                  Add Reminder
+                  {editTaskId ? "Update Reminder" : "Add Reminder"}
                 </button>
               </div>
             </div>

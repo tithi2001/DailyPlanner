@@ -19,6 +19,12 @@ const taskSchema = new mongoose.Schema(
       enum: ["note", "reminder"],
       required: true,
     },
+    reminderTime: {
+      type: Date,
+      required: function () {
+        return this.type === "reminder";
+      },
+    },
   },
   {
     timestamps: true,
