@@ -328,6 +328,11 @@ body {
 /* Reminder Specific */
 .reminder-modal .modal-button-submit {
   background-color: #ed8936;
+  color: white;
+}
+
+.reminder-modal .modal-button-submit:hover:not(:disabled) {
+  background-color: #dd7c2b;
 }
 
 .datetime-picker {
@@ -401,4 +406,66 @@ body {
 .reminder-time span:last-child {
   font-family: monospace; /* Ensures time digits align perfectly */
   letter-spacing: 0.5px;
+}
+
+.modal-button-disabled {
+  background-color: #cccccc !important;
+  color: #666666 !important;
+  cursor: not-allowed !important;
+  opacity: 0.7;
+}
+
+.favorite-star {
+  color: #ccc;
+  cursor: pointer;
+  font-size: 1.2rem;
+  margin-left: 0.5rem;
+  transition: all 0.2s;
+}
+
+.favorite-star.active {
+  color: #ffcc00;
+}
+
+.favorite-star:hover {
+  transform: scale(1.2);
+}
+
+.favorite-button {
+  width: 100%;
+  padding: 0.7rem;
+  margin: 0.5rem 0;
+  border: none;
+  border-radius: 8px;
+  background-color: #f7fafc;
+  color: #4a5568;
+  font-weight: 600;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  transition: all 0.3s;
+}
+
+.favorite-button:hover {
+  background-color: #e2e8f0;
+}
+
+.favorite-button.active {
+  background-color: #fff8e6;
+  color: #d69e2e;
+}
+
+/* .favorite-button::before {
+  content: "★";
+} */
+
+.favorite-button.active::before {
+  color: #ffcc00;
+}
+
+.task-title > div {
+  display: flex;
+  align-items: center;
 }

@@ -19,6 +19,10 @@ const taskSchema = new mongoose.Schema(
       enum: ["note", "reminder"],
       required: true,
     },
+    favorite: {
+      type: Boolean,
+      default: false,
+    },
     reminderTime: {
       type: Date,
       required: function () {
