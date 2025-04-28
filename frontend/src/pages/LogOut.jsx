@@ -1,10 +1,8 @@
-import React, { useState } from "react";
+import React from "react";
 import { useNavigate } from "react-router-dom";
-import profileImage from "../assets/profile.png";
 import "./logOut.css";
 
 const Logout = () => {
-  const [open, setOpen] = useState(false);
   const navigate = useNavigate();
 
   const handleLogout = () => {
@@ -13,18 +11,11 @@ const Logout = () => {
   };
 
   return (
-    <div className="profile-dropdown">
-      <img
-        src={profileImage}
-        alt="Profile"
-        className="profile-icon"
-        onClick={() => setOpen(!open)}
-      />
-      {open && (
-        <div className="dropdown-menu">
-          <p onClick={handleLogout}>Logout</p>
-        </div>
-      )}
+    <div className="logout-container">
+      <div className="logout-item" onClick={handleLogout}>
+        <span className="logout-icon">⎋</span>
+        <span>Log Out</span>
+      </div>
     </div>
   );
 };

@@ -7,15 +7,24 @@ export const getTasks = asyncHandler(async (req, res) => {
 });
 
 export const createTask = asyncHandler(async (req, res) => {
-    const { name, description, type } = req.body;
-     if (!name || !description || !type) {
-       res.status(400);
-       throw new Error("All fields are required");
+  const { name, description, type, reminderTime } = req.body;
+  if (!name || !description || !type) {
+    res.status(400);
+    throw new Error("All fields are required");
   }
-    const task = new Task({ user: req.user.id, name, description, type });
-    await task.save();
-    res.status(201).json(task);
-
+  if (type === "reminder" && !reminderTime) {
+    res.status(400);
+    throw new Error("Reminder time is required for reminder tasks");
+  }
+  const task = new Task({
+    user: req.user.id,
+    name,
+    description,
+    type,
+    reminderTime: type === "reminder" ? reminderTime : undefined,
+  });
+  await task.save();
+  res.status(201).json(task);
 });
 
 export const updateTask = asyncHandler(async (req, res) => {
@@ -29,6 +38,12 @@ export const updateTask = asyncHandler(async (req, res) => {
     res.status(403);
     throw new Error("Not authorized to update this task");
   }
+
+  if (req.body.type === "reminder" && !req.body.reminderTime) {
+    res.status(400);
+    throw new Error("Reminder time is required for reminder tasks");
+  }
+
   Object.assign(task, req.body);
   await task.save();
 

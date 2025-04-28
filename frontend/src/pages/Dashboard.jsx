@@ -11,6 +11,11 @@ const Dashboard = () => {
   const [type, setType] = useState("note");
   const [editTaskId, setEditTaskId] = useState(null);
   const [filterType, setFilterType] = useState("all");
+  const [showNoteModal, setShowNoteModal] = useState(false);
+  const [showReminderModal, setShowReminderModal] = useState(false);
+  const [reminderDate, setReminderDate] = useState("");
+  const [reminderTime, setReminderTime] = useState("");
+  const [dateError, setDateError] = useState("");
   const navigate = useNavigate();
 
   const token = localStorage.getItem("token");
@@ -38,10 +43,22 @@ const Dashboard = () => {
     fetchTasks();
   }, []);
 
+  const isReminderDateValid = () => {
+    if (!reminderDate || !reminderTime) return false;
+    const now = new Date();
+    const reminderDateTime = new Date(`${reminderDate}T${reminderTime}:00`);
+    return reminderDateTime > now;
+  };
+
   const handleSubmit = async (e) => {
-    e.preventDefault();
+    if (e) e.preventDefault();
     try {
       const taskData = { name, description, type };
+      if (type === "reminder") {
+        const reminderDateTime = `${reminderDate}T${reminderTime}:00`;
+        taskData.reminderTime = reminderDateTime;
+      }
+
       let res;
 
       if (editTaskId) {
@@ -75,6 +92,10 @@ const Dashboard = () => {
 
       setName("");
       setDescription("");
+      setReminderDate("");
+      setReminderTime("");
+      setShowNoteModal(false);
+      setShowReminderModal(false);
       setType(filterType !== "all" ? filterType : "note");
     } catch (error) {
       console.error("Error saving task", error);
@@ -97,11 +118,21 @@ const Dashboard = () => {
   };
 
   const handleEdit = (task) => {
-    setEditTaskId(task._id);
     setName(task.name);
     setDescription(task.description);
     setType(task.type);
-    setFilterType(task.type);
+    setEditTaskId(task._id);
+
+    if (task.type.toLowerCase() === "note") {
+      setShowNoteModal(true);
+    } else if (task.type.toLowerCase() === "reminder") {
+      if (task.reminderTime) {
+        const [date, time] = task.reminderTime.split("T");
+        setReminderDate(date);
+        setReminderTime(time.slice(0, 5)); // Extract HH:mm
+      }
+      setShowReminderModal(true);
+    }
   };
 
   const handleTypeChange = (e) => {
@@ -115,91 +146,225 @@ const Dashboard = () => {
     }
   };
 
+  const openNoteModal = () => {
+    setType("note");
+    setName("");
+    setDescription("");
+    setEditTaskId(null);
+    setShowNoteModal(true);
+  };
+
+  const openReminderModal = () => {
+    setType("reminder");
+    setName("");
+    setDescription("");
+    setReminderDate("");
+    setReminderTime("");
+    setEditTaskId(null);
+    setShowReminderModal(true);
+  };
+
   const filteredTasks =
     filterType === "all"
       ? tasks
       : tasks.filter((task) => task.type === filterType);
 
   return (
-    <div className="dashboard-container">
-      <div className="dashboard-card">
+    <div className="dashboard-wrapper">
+      <aside className="sidebar">
         <h1>Daily Planner</h1>
+        <div className="sidebar-buttons">
+          <button className="note-button" onClick={openNoteModal}>
+            Add Note
+          </button>
+          <button className="reminder-button" onClick={openReminderModal}>
+            Add Reminder
+          </button>
+        </div>
+        <select value={filterType} onChange={handleTypeChange}>
+          <option value="all">All Tasks</option>
+          <option value="note">Notes</option>
+          <option value="reminder">Reminders</option>
+        </select>
+        <Logout />
+      </aside>
 
-        <form className="task-form" onSubmit={handleSubmit}>
-          <input
-            type="text"
-            placeholder="Task name"
-            value={name}
-            onChange={(e) => setName(e.target.value)}
-            required
-          />
-          <input
-            type="text"
-            placeholder="Description"
-            value={description}
-            onChange={(e) => setDescription(e.target.value)}
-            required
-          />
-          <select value={filterType} onChange={handleTypeChange}>
-            <option value="all">All</option>
-            <option value="note">Note</option>
-            <option value="reminder">Reminder</option>
-          </select>
-          <button type="submit">{editTaskId ? "Update" : "Add"} Task</button>
-          <Logout />
-        </form>
-
+      <main className="dashboard-main">
         <div className="task-list">
           {filteredTasks.length > 0 ? (
-            filteredTasks.map((task) => {
-              const created = new Date(task.createdAt);
-              const updated = new Date(task.updatedAt);
-              const isUpdated = updated.getTime() !== created.getTime();
-
-              return (
-                <div key={task._id} className={`task-card ${task.type}`}>
+            filteredTasks.map((task) => (
+              <div key={task._id} className={`task-card ${task.type}`}>
+                <div className="task-title">
                   <h3>{task.name}</h3>
-                  <p>{task.description}</p>
-                  <div className="task-type-icon">
-                    {task.type === "note" ? (
-                      <span title="Note" className="note-icon">
-                        ✏️
-                      </span>
-                    ) : (
-                      <span title="Reminder" className="reminder-icon">
-                        🔔
-                      </span>
-                    )}
-                  </div>
-                  <small>
-                    {new Date(task.createdAt).getTime() !==
-                    new Date(task.updatedAt).getTime()
-                      ? `Updated: ${new Date(task.updatedAt).toLocaleString()}`
-                      : `Created: ${new Date(task.createdAt).toLocaleString()}`}
-                  </small>
-
-                  <div className="button-group">
-                    <button
-                      className="edit-btn"
-                      onClick={() => handleEdit(task)}
-                    >
-                      Edit
-                    </button>
-                    <button
-                      className="delete-btn"
-                      onClick={() => handleDelete(task._id)}
-                    >
-                      Delete
-                    </button>
-                  </div>
+                  <span className="task-type">{task.type}</span>
                 </div>
-              );
-            })
+                <p>{task.description}</p>
+                {task.type === "reminder" && task.reminderTime && (
+                  <div className="reminder-time">
+                    <span>Remind Me:</span>
+                    <span>
+                      {new Date(task.reminderTime)
+                        .toLocaleString("en-IN", {
+                          timeZone: "Asia/Kolkata",
+                          day: "2-digit",
+                          month: "short",
+                          year: "numeric",
+                          hour: "2-digit",
+                          minute: "2-digit",
+                          hour12: false,
+                        })
+                        .replace(/,/g, "")
+                        .replace(/(\d+:\d+)/, "$1") +
+                        (new Date(task.reminderTime).getHours() >= 12
+                          ? "PM"
+                          : "AM")}
+                    </span>
+                  </div>
+                )}
+                <small>
+                  {task.updatedAt !== task.createdAt
+                    ? `Updated: ${new Date(task.updatedAt).toLocaleString()}`
+                    : `Created: ${new Date(task.createdAt).toLocaleString()}`}
+                </small>
+                <div className="button-group">
+                  <button
+                    onClick={() => handleEdit(task)}
+                    className={`edit-button ${
+                      task.type === "reminder" ? "reminder-edit" : ""
+                    }`}
+                  >
+                    Edit
+                  </button>
+                  <button onClick={() => handleDelete(task._id)}>Delete</button>
+                </div>
+              </div>
+            ))
           ) : (
-            <p>No tasks found for selected type.</p>
+            <p>No tasks found.</p>
           )}
         </div>
-      </div>
+
+        {/* Note Modal */}
+        {showNoteModal && (
+          <div className="modal-overlay">
+            <div className="modal">
+              <div className="modal-header">
+                {editTaskId ? "Edit Note" : "Add Note"}
+              </div>
+              <div className="modal-body">
+                <input
+                  type="text"
+                  className="modal-input"
+                  placeholder="Title"
+                  value={name}
+                  onChange={(e) => setName(e.target.value)}
+                  required
+                />
+                <textarea
+                  className="modal-input modal-textarea"
+                  placeholder="Description"
+                  value={description}
+                  onChange={(e) => setDescription(e.target.value)}
+                  required
+                />
+              </div>
+              <div className="modal-footer">
+                <button
+                  type="button"
+                  className="modal-button modal-button-cancel"
+                  onClick={() => setShowNoteModal(false)}
+                >
+                  Cancel
+                </button>
+                <button
+                  type="button"
+                  className="modal-button modal-button-submit"
+                  onClick={handleSubmit}
+                >
+                  {editTaskId ? "Update Note" : "Add Note"}
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Reminder Modal */}
+        {showReminderModal && (
+          <div className="modal-overlay">
+            <div className="modal reminder-modal">
+              <div className="modal-header">
+                {editTaskId ? "Edit Reminder" : "Add Reminder"}
+              </div>
+              <div className="modal-body">
+                <input
+                  type="text"
+                  className="modal-input"
+                  placeholder="Title"
+                  value={name}
+                  onChange={(e) => setName(e.target.value)}
+                  required
+                />
+                <textarea
+                  className="modal-input modal-textarea"
+                  placeholder="Description"
+                  value={description}
+                  onChange={(e) => setDescription(e.target.value)}
+                  required
+                />
+                <div className="datetime-picker">
+                  <label>Date & Time</label>
+                  <input
+                    type="date"
+                    className="modal-input"
+                    value={reminderDate}
+                    onChange={(e) => setReminderDate(e.target.value)}
+                    min={new Date().toISOString().split("T")[0]}
+                    required
+                  />
+                  <input
+                    type="time"
+                    className="modal-input"
+                    value={reminderTime}
+                    onChange={(e) => setReminderTime(e.target.value)}
+                    min={
+                      reminderDate === new Date().toISOString().split("T")[0]
+                        ? `${new Date()
+                            .getHours()
+                            .toString()
+                            .padStart(2, "0")}:${(new Date().getMinutes() + 1)
+                            .toString()
+                            .padStart(2, "0")}`
+                        : "00:00"
+                    }
+                    required
+                  />
+                  {dateError && <p className="error-message">{dateError}</p>}
+                </div>
+              </div>
+              <div className="modal-footer">
+                <button
+                  type="button"
+                  className="modal-button modal-button-cancel"
+                  onClick={() => {
+                    setShowReminderModal(false);
+                    setDateError("");
+                  }}
+                >
+                  Cancel
+                </button>
+                <button
+                  type="button"
+                  className="modal-button modal-button-submit"
+                  onClick={handleSubmit}
+                  disabled={!isReminderDateValid()}
+                >
+                  {editTaskId ? "Update Reminder" : "Add Reminder"}
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+      </main>
     </div>
   );
 };

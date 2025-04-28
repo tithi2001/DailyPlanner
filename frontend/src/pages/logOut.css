@@ -1,43 +1,30 @@
-.profile-wrapper {
-  position: relative;
-  display: inline-block;
+.logout-container {
+  margin-top: auto;
+  padding-top: 1rem;
+  border-top: 1px solid #101011;
+  position: sticky;
+  bottom: 0;
+  /* background-color: #ededee; */
+  z-index: 10;
+}
+
+
+.logout-item {
+  display: flex;
+  align-items: center;
+  gap: 0.8rem;
+  padding: 0.8rem;
   cursor: pointer;
+  border-radius: 6px;
+  transition: background-color 0.2s ease;
+  color: #01080c;
+  font-size: 0.95rem;
 }
 
-.profile-icon {
-  width: 32px;
-  height: 32px;
-  border-radius: 50%;
+.logout-item:hover {
+  background-color: #eef0e6;
 }
 
-/* This wraps the icon and the dropdown */
-.profile-dropdown {
-  position: relative;
-  display: inline-block;
-}
-
-/* This is the dropdown itself */
-.dropdown-menu {
-  position: absolute;
-  top: 100%; /* This puts it right below the icon */
-  left: 50%;
-  transform: translateX(-50%); /* Horizontally center-aligns to the icon */
-  background: #1e1e1e;
-  color: white;
-  padding: 6px 12px;
-  border-radius: 8px;
-  font-size: 0.8rem;
-  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
-  z-index: 100;
-  white-space: nowrap;
-}
-
-.dropdown-menu p {
-  margin: 0;
-  padding: 4px 8px;
-  cursor: pointer;
-}
-
-.dropdown-menu p:hover {
-  background-color: #333;
+.logout-icon {
+  font-size: 1.1rem;
 }
