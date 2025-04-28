@@ -201,7 +201,7 @@ const Dashboard = () => {
                 <p>{task.description}</p>
                 {task.type === "reminder" && task.reminderTime && (
                   <div className="reminder-time">
-                    <span>Reminder:</span>
+                    <span>Remind Me:</span>
                     <span>
                       {new Date(task.reminderTime)
                         .toLocaleString("en-IN", {
