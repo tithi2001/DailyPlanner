@@ -140,6 +140,7 @@ const Dashboard = () => {
 
   const handleTypeChange = (e) => {
     const selected = e.target.value;
+    setShowFavorites(false);
     if (selected === "all") {
       setType("note");
       setFilterType("all");
