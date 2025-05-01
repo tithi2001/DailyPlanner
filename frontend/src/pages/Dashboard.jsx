@@ -16,6 +16,7 @@ const Dashboard = () => {
   const [reminderDate, setReminderDate] = useState("");
   const [reminderTime, setReminderTime] = useState("");
   const [dateError, setDateError] = useState("");
+  const [showFavorites, setShowFavorites] = useState(false);
   const navigate = useNavigate();
 
   const token = localStorage.getItem("token");
@@ -43,8 +44,10 @@ const Dashboard = () => {
     fetchTasks();
   }, []);
 
-  const isReminderDateValid = () => {
-    if (!reminderDate || !reminderTime) return false;
+  const isReminderFormValid = () => {
+    if (!name || !description || !reminderDate || !reminderTime) {
+      return false;
+    }
     const now = new Date();
     const reminderDateTime = new Date(`${reminderDate}T${reminderTime}:00`);
     return reminderDateTime > now;
@@ -129,7 +132,7 @@ const Dashboard = () => {
       if (task.reminderTime) {
         const [date, time] = task.reminderTime.split("T");
         setReminderDate(date);
-        setReminderTime(time.slice(0, 5)); // Extract HH:mm
+        setReminderTime(time.slice(0, 5));
       }
       setShowReminderModal(true);
     }
@@ -137,6 +140,7 @@ const Dashboard = () => {
 
   const handleTypeChange = (e) => {
     const selected = e.target.value;
+    setShowFavorites(false);
     if (selected === "all") {
       setType("note");
       setFilterType("all");
@@ -164,10 +168,33 @@ const Dashboard = () => {
     setShowReminderModal(true);
   };
 
+  const toggleFavorite = async (taskId, currentFavoriteStatus) => {
+    try {
+      const res = await axios.put(
+        `http://localhost:5000/api/tasks/${taskId}`,
+        { favorite: !currentFavoriteStatus },
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+      setTasks((prev) =>
+        prev.map((task) => (task._id === taskId ? res.data : task))
+      );
+    } catch (error) {
+      console.error("Failed to update favorite status", error);
+    }
+  };
+
   const filteredTasks =
     filterType === "all"
       ? tasks
       : tasks.filter((task) => task.type === filterType);
+
+  const favoriteNotes = tasks.filter(
+    (task) => task.favorite && task.type === "note"
+  );
 
   return (
     <div className="dashboard-wrapper">
@@ -186,17 +213,78 @@ const Dashboard = () => {
           <option value="note">Notes</option>
           <option value="reminder">Reminders</option>
         </select>
+        <button
+          className={`favorite-button ${showFavorites ? "active" : ""}`}
+          onClick={() => setShowFavorites(!showFavorites)}
+        >
+          Favorites
+        </button>
         <Logout />
       </aside>
 
       <main className="dashboard-main">
         <div className="task-list">
-          {filteredTasks.length > 0 ? (
+          {showFavorites ? (
+            favoriteNotes.length > 0 ? (
+              favoriteNotes.map((task) => (
+                <div key={task._id} className={`task-card ${task.type}`}>
+                  <div className="task-title">
+                    <h3>{task.name}</h3>
+                    <div>
+                      <span className="task-type">{task.type}</span>
+                      <span
+                        className={`favorite-star ${
+                          task.favorite ? "active" : ""
+                        }`}
+                        onClick={() => toggleFavorite(task._id, task.favorite)}
+                      >
+                        ★
+                      </span>
+                    </div>
+                  </div>
+                  <p>{task.description}</p>
+                  <small>
+                    {task.updatedAt !== task.createdAt
+                      ? `Updated: ${new Date(task.updatedAt).toLocaleString()}`
+                      : `Created: ${new Date(task.createdAt).toLocaleString()}`}
+                  </small>
+                  <div className="button-group">
+                    <button
+                      onClick={() => handleEdit(task)}
+                      className={`edit-button ${
+                        task.type === "reminder" ? "reminder-edit" : ""
+                      }`}
+                    >
+                      Edit
+                    </button>
+                    
+                    <button onClick={() => handleDelete(task._id)}>
+                      Delete
+                    </button>
+                  </div>
+                </div>
+              ))
+            ) : (
+              <p>No favorite notes found.</p>
+            )
+          ) : filteredTasks.length > 0 ? (
             filteredTasks.map((task) => (
               <div key={task._id} className={`task-card ${task.type}`}>
                 <div className="task-title">
                   <h3>{task.name}</h3>
-                  <span className="task-type">{task.type}</span>
+                  <div>
+                    <span className="task-type">{task.type}</span>
+                    {task.type === "note" && (
+                      <span
+                        className={`favorite-star ${
+                          task.favorite ? "active" : ""
+                        }`}
+                        onClick={() => toggleFavorite(task._id, task.favorite)}
+                      >
+                        ★
+                      </span>
+                    )}
+                  </div>
                 </div>
                 <p>{task.description}</p>
                 {task.type === "reminder" && task.reminderTime && (
@@ -317,7 +405,19 @@ const Dashboard = () => {
                     type="date"
                     className="modal-input"
                     value={reminderDate}
-                    onChange={(e) => setReminderDate(e.target.value)}
+                    onChange={(e) => {
+                      setReminderDate(e.target.value);
+                      if (e.target.value && reminderTime) {
+                        const selectedDateTime = new Date(
+                          `${e.target.value}T${reminderTime}:00`
+                        );
+                        setDateError(
+                          selectedDateTime <= new Date()
+                            ? "Please select a future date and time"
+                            : ""
+                        );
+                      }
+                    }}
                     min={new Date().toISOString().split("T")[0]}
                     required
                   />
@@ -325,7 +425,19 @@ const Dashboard = () => {
                     type="time"
                     className="modal-input"
                     value={reminderTime}
-                    onChange={(e) => setReminderTime(e.target.value)}
+                    onChange={(e) => {
+                      setReminderTime(e.target.value);
+                      if (reminderDate && e.target.value) {
+                        const selectedDateTime = new Date(
+                          `${reminderDate}T${e.target.value}:00`
+                        );
+                        setDateError(
+                          selectedDateTime <= new Date()
+                            ? "Please select a future date and time"
+                            : ""
+                        );
+                      }
+                    }}
                     min={
                       reminderDate === new Date().toISOString().split("T")[0]
                         ? `${new Date()
@@ -354,9 +466,13 @@ const Dashboard = () => {
                 </button>
                 <button
                   type="button"
-                  className="modal-button modal-button-submit"
-                  onClick={handleSubmit}
-                  disabled={!isReminderDateValid()}
+                  className={`modal-button ${
+                    isReminderFormValid()
+                      ? "modal-button-submit"
+                      : "modal-button-disabled"
+                  }`}
+                  onClick={isReminderFormValid() ? handleSubmit : undefined}
+                  disabled={!isReminderFormValid()}
                 >
                   {editTaskId ? "Update Reminder" : "Add Reminder"}
                 </button>
@@ -370,3 +486,5 @@ const Dashboard = () => {
 };
 
 export default Dashboard;
+
+
