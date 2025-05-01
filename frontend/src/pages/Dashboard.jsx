@@ -257,6 +257,7 @@ const Dashboard = () => {
                     >
                       Edit
                     </button>
+                    
                     <button onClick={() => handleDelete(task._id)}>
                       Delete
                     </button>
@@ -485,3 +486,5 @@ const Dashboard = () => {
 };
 
 export default Dashboard;
+
+
