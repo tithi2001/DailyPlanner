@@ -25,6 +25,6 @@ jobs:
         env:
           MONGO_URI: ${{ secrets.MONGO_URI }}
           SENDGRID_API_KEY: ${{ secrets.SENDGRID_API_KEY }}
+          SENDER_EMAIL: ${{ secrets.SENDER_EMAIL }}
         run: node scripts/check-reminders.js
 
-        
