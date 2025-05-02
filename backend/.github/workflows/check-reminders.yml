@@ -1,0 +1,25 @@
+name: Check Reminders
+on:
+  schedule:
+    - cron: '*/2 * * * *'  # Runs every 2 minutes
+  workflow_dispatch:  # Allow manual triggers
+
+jobs:
+  check-reminders:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 18
+
+      - name: Install dependencies
+        run: npm install mongodb @sendgrid/mail
+
+      - name: Run reminder checker
+        env:
+          MONGO_URI: ${{ secrets.MONGO_URI }}
+          SENDGRID_API_KEY: ${{ secrets.SENDGRID_API_KEY }}
+        run: node scripts/check-reminders.js
