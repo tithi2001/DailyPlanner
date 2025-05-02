@@ -10,16 +10,21 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Set up Node.js
+      - name: Set up Node.js 20
         uses: actions/setup-node@v4
         with:
-          node-version: 18
+          node-version: '20'  # Explicitly specify Node 20
+          cache: 'npm'
 
       - name: Install dependencies
+        working-directory: ./backend  # Target your backend folder
         run: npm install mongodb @sendgrid/mail
 
       - name: Run reminder checker
+        working-directory: ./backend  # All commands execute from here
         env:
           MONGO_URI: ${{ secrets.MONGO_URI }}
           SENDGRID_API_KEY: ${{ secrets.SENDGRID_API_KEY }}
         run: node scripts/check-reminders.js
+
+        
