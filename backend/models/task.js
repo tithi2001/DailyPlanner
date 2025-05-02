@@ -29,6 +29,18 @@ const taskSchema = new mongoose.Schema(
         return this.type === "reminder";
       },
     },
+    notifications: [
+      {
+        triggerType: String, // "3h", "1h", "10m", "0m"
+        status: {
+          type: String,
+          enum: ["pending", "sent", "failed"],
+          default: "pending",
+        },
+        sentAt: Date,
+        error: String,
+      },
+    ],
   },
   {
     timestamps: true,

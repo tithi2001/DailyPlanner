@@ -51,7 +51,7 @@ sgMail.setApiKey(process.env.SENDGRID_API_KEY);
         // Send Email
         const msg = {
           to: reminder.user.email,
-          from: "your-verified-email@example.com",
+          from: process.env.SENDER_EMAIL || "noreply@yourdomain.com",
           subject: `Reminder: ${reminder.name}`,
           text: `Hi! This is a reminder: ${reminder.description}\nTime: ${reminder.reminderTime}`,
         };
