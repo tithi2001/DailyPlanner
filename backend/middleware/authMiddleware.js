@@ -11,6 +11,7 @@ const authMiddleware = asyncHandler(async (req, res, next) => {
      }
     const verified = jwt.verify(token, process.env.JWT_SECRET);
     // if
+    console.log(verified);
     req.user = verified;
     next();
 });
