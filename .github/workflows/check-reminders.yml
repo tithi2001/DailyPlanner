@@ -17,11 +17,11 @@ jobs:
           cache: 'npm'
 
       - name: Install dependencies
-        working-directory: /backend  # Target your backend folder
+        working-directory: ./backend  # Target your backend folder
         run: npm install mongodb @sendgrid/mail
 
       - name: Run reminder checker
-        working-directory: /backend  # All commands execute from here
+        working-directory: ./backend  # All commands execute from here
         env:
           MONGO_URI: ${{ secrets.MONGO_URI }}
           SENDGRID_API_KEY: ${{ secrets.SENDGRID_API_KEY }}
