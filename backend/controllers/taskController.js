@@ -29,7 +29,7 @@ export const createTask = asyncHandler(async (req, res) => {
 
   const task = new Task({
     user: req.user.id,
-    userEmail: user.email, // Store user's email
+    email: req.user.email, // Store user's email
     name,
     description,
     type,

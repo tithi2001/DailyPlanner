@@ -1,80 +1,66 @@
 import { MongoClient } from "mongodb";
 import sgMail from "@sendgrid/mail";
+import dotenv from "dotenv";
+import path from "path";
+import { fileURLToPath } from "url";
 
-sgMail.setApiKey(process.env.SENDGRID_API_KEY);
+// Resolve __dirname in ES modules
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
-(async () => {
-  const client = new MongoClient(process.env.MONGO_URI);
+// Load environment variables from the root .env file
+dotenv.config({ path: path.resolve(__dirname, "../../.env") });
+
+const mongoUri = process.env.MONGO_URI;
+const sendgridApiKey = process.env.SENDGRID_API_KEY;
+const senderEmail = process.env.EMAIL_SENDER;
+
+console.log("MONGO_URI:", mongoUri);
+console.log("SENDGRID_API_KEY:", sendgridApiKey);
+console.log("SENDER_EMAIL:", senderEmail);
+
+sgMail.setApiKey(sendgridApiKey);
+
+async function checkRemindersAndSendEmail() {
+  const client = new MongoClient(mongoUri);
   try {
     await client.connect();
-    const db = client.db("reminder_app");
+    const db = client.db("todo");
     const tasks = db.collection("tasks");
-    const now = new Date();
 
-    const upcomingReminders = await tasks
+    const now = new Date();
+    console.log(typeof (now));
+    
+    const reminders = await tasks
       .find({
         type: "reminder",
-        status: "pending",
-        reminderTime: { $lte: new Date(now.getTime() + 3 * 60 * 60 * 1000) },
-        $or: [
-          {
-            "triggers.3h.sent": false,
-            reminderTime: {
-              $lte: new Date(now.getTime() + 3 * 60 * 60 * 1000),
-            },
-          },
-          {
-            "triggers.1h.sent": false,
-            reminderTime: {
-              $lte: new Date(now.getTime() + 1 * 60 * 60 * 1000),
-            },
-          },
-          {
-            "triggers.10m.sent": false,
-            reminderTime: { $lte: new Date(now.getTime() + 10 * 60 * 1000) },
-          },
-          { "triggers.0m.sent": false, reminderTime: { $lte: now } },
-        ],
+        reminderTime: { $lte: now },
       })
       .toArray();
+    
+    console.log(now);
+    console.log(reminders);
 
-    for (const reminder of upcomingReminders) {
-      const timeLeft = (reminder.reminderTime - now) / (1000 * 60); // Minutes left
-      let triggerType = null;
+    for (const reminder of reminders) {
+      const msg = {
+        to: reminder.email,
+        from: senderEmail,
+        subject: `Reminder: ${reminder.name}`,
+        text: reminder.description || "You have a scheduled reminder.",
+      };
 
-      if (timeLeft <= 0) triggerType = "0m";
-      else if (timeLeft <= 10) triggerType = "10m";
-      else if (timeLeft <= 60) triggerType = "1h";
-      else if (timeLeft <= 180) triggerType = "3h";
-
-      if (triggerType) {
-        // Send Email
-        const msg = {
-          to: reminder.user.email,
-          from: process.env.SENDER_EMAIL || "noreply@yourdomain.com",
-          subject: `Reminder: ${reminder.name}`,
-          text: `Hi! This is a reminder: ${reminder.description}\nTime: ${reminder.reminderTime}`,
-        };
-
+      try {
         await sgMail.send(msg);
-
-        // Update DB
-        await tasks.updateOne(
-          { _id: reminder._id },
-          {
-            $push: {
-              triggers: { type: triggerType, sent: true, sentAt: new Date() },
-            },
-            $set: { status: triggerType === "0m" ? "sent" : "pending" },
-          }
-        );
+        console.log(`Email sent to ${reminder.email}`);
+      } catch (err) {
+        console.error("SendGrid error:", err.response?.body || err.message);
       }
     }
   } catch (err) {
-    console.error(err);
-    process.exit(1);
+    console.error("MongoDB error:", err.message);
   } finally {
     await client.close();
   }
-})();
+}
 
+checkRemindersAndSendEmail();
