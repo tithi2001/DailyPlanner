@@ -34,6 +34,12 @@ const taskSchema = new mongoose.Schema(
         return this.type === "reminder";
       },
     },
+    sentFlag: {
+      type: String,
+      required: function () {
+        return this.type === "reminder";
+      }
+    },
     notifications: [
       {
         triggerType: String, // "3h", "1h", "10m", "0m"

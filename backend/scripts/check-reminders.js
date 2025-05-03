@@ -34,6 +34,7 @@ async function checkRemindersAndSendEmail() {
     const reminders = await tasks
       .find({
         type: "reminder",
+        sentFlag: "false",
         reminderTime: { $lte: now },
       })
       .toArray();
@@ -52,6 +53,10 @@ async function checkRemindersAndSendEmail() {
       try {
         await sgMail.send(msg);
         console.log(`Email sent to ${reminder.email}`);
+        await tasks.updateOne(
+          { _id: reminder._id },
+          { $set: { sentFlag: "true" } }
+        );
       } catch (err) {
         console.error("SendGrid error:", err.response?.body || err.message);
       }

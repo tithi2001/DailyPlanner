@@ -8,7 +8,7 @@ export const getTasks = asyncHandler(async (req, res) => {
 });
 
 export const createTask = asyncHandler(async (req, res) => {
-  const { name, description, type, reminderTime } = req.body;
+  const { name, description, type, reminderTime, sentFlag } = req.body;
 
   // Validation
   if (!name || !description || !type) {
@@ -34,6 +34,7 @@ export const createTask = asyncHandler(async (req, res) => {
     description,
     type,
     reminderTime: type === "reminder" ? reminderTime : undefined,
+    sentFlag: type === "reminder" ? sentFlag : undefined,
     notifications: [], // Initialize empty notifications array
   });
 

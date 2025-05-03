@@ -60,6 +60,7 @@ const Dashboard = () => {
       if (type === "reminder") {
         const reminderDateTime = `${reminderDate}T${reminderTime}:00`;
         taskData.reminderTime = reminderDateTime;
+        taskData.sentFlag = false;
       }
 
       let res;
